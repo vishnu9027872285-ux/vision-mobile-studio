@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Filter, Search, MapPin, Navigation } from 'lucide-react';
+import { Filter, Search, MapPin, Navigation, ThumbsUp, Users, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import MapboxMap from '@/components/MapboxMap';
 
-// Mock data for map markers
+// Mock data for map markers with community engagement
 const MOCK_ISSUES = [
   {
     id: 'NRK-123456',
@@ -18,7 +19,10 @@ const MOCK_ISSUES = [
     location: { lat: 40.7128, lng: -74.0060 },
     address: 'Main Street, Downtown',
     reportedDate: '2024-01-15',
-    photos: 2
+    photos: 2,
+    upvotes: 12,
+    meeTooCount: 8,
+    shares: 3
   },
   {
     id: 'NRK-123457',
@@ -29,7 +33,10 @@ const MOCK_ISSUES = [
     location: { lat: 40.7158, lng: -74.0050 },
     address: 'Central Park Entrance',
     reportedDate: '2024-01-14',
-    photos: 3
+    photos: 3,
+    upvotes: 5,
+    meeTooCount: 3,
+    shares: 1
   },
   {
     id: 'NRK-123458',
@@ -40,7 +47,10 @@ const MOCK_ISSUES = [
     location: { lat: 40.7098, lng: -74.0070 },
     address: '5th Avenue & Oak Street',
     reportedDate: '2024-01-13',
-    photos: 1
+    photos: 1,
+    upvotes: 7,
+    meeTooCount: 4,
+    shares: 2
   }
 ];
 
@@ -64,8 +74,10 @@ const Map = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [selectedIssue, setSelectedIssue] = useState<typeof MOCK_ISSUES[0] | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<(typeof MOCK_ISSUES[0] & { upvotes: number; meeTooCount: number; shares: number }) | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
+  const [userMeeToos, setUserMeeToos] = useState<Set<string>>(new Set());
 
   // Filter issues based on current filters
   const filteredIssues = MOCK_ISSUES.filter(issue => {
@@ -100,21 +112,48 @@ const Map = () => {
     });
   };
 
+  const handleUpvote = (issueId: string) => {
+    const newVotes = new Set(userVotes);
+    if (newVotes.has(issueId)) {
+      newVotes.delete(issueId);
+    } else {
+      newVotes.add(issueId);
+    }
+    setUserVotes(newVotes);
+  };
+
+  const handleMeeToo = (issueId: string) => {
+    const newMeeToos = new Set(userMeeToos);
+    if (newMeeToos.has(issueId)) {
+      newMeeToos.delete(issueId);
+    } else {
+      newMeeToos.add(issueId);
+    }
+    setUserMeeToos(newMeeToos);
+  };
+
+  const handleShare = (issue: typeof MOCK_ISSUES[0]) => {
+    if (navigator.share) {
+      navigator.share({
+        title: issue.title,
+        text: `Check out this community issue: ${issue.title}`,
+        url: window.location.href
+      });
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(`${issue.title} - ${window.location.href}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Map Container */}
       <div className="relative h-[70vh] bg-muted">
-        {/* Placeholder for actual map implementation */}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-          <div className="text-center">
-            <MapPin className="h-16 w-16 text-primary mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Interactive Map</h3>
-            <p className="text-muted-foreground">Map integration would be implemented here</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Showing {filteredIssues.length} issues in the area
-            </p>
-          </div>
-        </div>
+        <MapboxMap 
+          issues={filteredIssues}
+          onIssueSelect={(issue) => setSelectedIssue(issue as any)}
+          filters={{ status: statusFilter, category: categoryFilter, search: searchTerm }}
+        />
 
         {/* Map Controls */}
         <div className="absolute top-4 left-4 right-4 z-10">
@@ -261,12 +300,47 @@ const Map = () => {
                     <Badge variant="outline" className="text-xs">
                       {CATEGORY_LABELS[issue.category as keyof typeof CATEGORY_LABELS]}
                     </Badge>
-                    <Button 
-                      variant="ghost" 
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedIssue(issue)}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Community Engagement */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                    <div className="flex gap-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`flex items-center gap-1 ${userVotes.has(issue.id) ? 'text-primary' : ''}`}
+                        onClick={() => handleUpvote(issue.id)}
+                      >
+                        <ThumbsUp className={`h-3 w-3 ${userVotes.has(issue.id) ? 'fill-current' : ''}`} />
+                        <span className="text-xs">{(issue.upvotes || 0) + (userVotes.has(issue.id) ? 1 : 0)}</span>
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`flex items-center gap-1 ${userMeeToos.has(issue.id) ? 'text-secondary' : ''}`}
+                        onClick={() => handleMeeToo(issue.id)}
+                      >
+                        <Users className={`h-3 w-3 ${userMeeToos.has(issue.id) ? 'fill-current' : ''}`} />
+                        <span className="text-xs">{(issue.meeTooCount || 0) + (userMeeToos.has(issue.id) ? 1 : 0)} Me Too</span>
+                      </Button>
+                    </div>
+                    
+                    <Button
+                      variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedIssue(issue)}
+                      onClick={() => handleShare(issue)}
                     >
-                      View Details
+                      <Share2 className="h-3 w-3" />
                     </Button>
                   </div>
                 </CardContent>

@@ -1,10 +1,14 @@
 import React from 'react';
-import { Info, Settings, Phone, FileText, Shield } from 'lucide-react';
+import { Info, Settings, Phone, FileText, Shield, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
 
 export const HamburgerMenu: React.FC = () => {
+  const navigate = useNavigate();
+  
   const menuItems = [
+    { icon: WifiOff, label: 'Offline Status', action: () => navigate('/offline') },
     { icon: Info, label: 'About/Help', href: '/about' },
     { icon: Settings, label: 'App Settings', href: '/settings' },
     { icon: Phone, label: 'Contact Support', href: '/contact' },
@@ -22,12 +26,20 @@ export const HamburgerMenu: React.FC = () => {
               key={item.label}
               variant="ghost"
               className="w-full justify-start"
-              asChild
+              onClick={item.action}
+              asChild={!item.action}
             >
-              <a href={item.href} className="flex items-center space-x-3">
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </a>
+              {item.action ? (
+                <div className="flex items-center space-x-3">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </div>
+              ) : (
+                <a href={item.href} className="flex items-center space-x-3">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </a>
+              )}
             </Button>
           ))}
         </nav>
