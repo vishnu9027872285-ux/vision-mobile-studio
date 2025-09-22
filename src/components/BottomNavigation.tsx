@@ -3,18 +3,22 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, FileText, List, Map, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
-const navigationItems = [
+const getNavigationItems = (user: any) => [
   { icon: Home, label: 'Home', path: '/' },
-  { icon: FileText, label: 'Report', path: '/report/new' },
-  { icon: List, label: 'My Reports', path: '/reports' },
-  { icon: Map, label: 'Map', path: '/map' },
-  { icon: User, label: 'Profile', path: '/profile' },
+  { icon: FileText, label: 'Report', path: user ? '/report/new' : '/auth' },
+  { icon: List, label: 'My Reports', path: user ? '/reports' : '/auth' },
+  { icon: Map, label: 'Map', path: user ? '/map' : '/auth' },
+  { icon: User, label: 'Profile', path: user ? '/profile' : '/auth' },
 ];
 
 export const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const navigationItems = getNavigationItems(user);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
