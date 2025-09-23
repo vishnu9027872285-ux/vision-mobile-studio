@@ -50,6 +50,110 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      comments: {
+        Row: {
+          attachments: string[] | null
+          content: string
+          created_at: string
+          id: string
+          internal_only: boolean
+          report_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: string[] | null
+          content: string
+          created_at?: string
+          id?: string
+          internal_only?: boolean
+          report_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attachments?: string[] | null
+          content?: string
+          created_at?: string
+          id?: string
+          internal_only?: boolean
+          report_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          email: string | null
+          head_user_id: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          head_user_id?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          head_user_id?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -85,6 +189,81 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          assigned_to: string | null
+          category_id: string | null
+          created_at: string
+          department_id: string | null
+          description: string
+          id: string
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          photos: string[] | null
+          priority: Database["public"]["Enums"]["report_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          title: string
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          description: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          photos?: string[] | null
+          priority?: Database["public"]["Enums"]["report_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          title: string
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category_id?: string | null
+          created_at?: string
+          department_id?: string | null
+          description?: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          photos?: string[] | null
+          priority?: Database["public"]["Enums"]["report_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          title?: string
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -129,6 +308,14 @@ export type Database = {
     }
     Enums: {
       app_role: "citizen" | "admin" | "department_staff"
+      report_priority: "low" | "medium" | "high" | "urgent"
+      report_status:
+        | "submitted"
+        | "under_review"
+        | "in_progress"
+        | "resolved"
+        | "closed"
+        | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -257,6 +444,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["citizen", "admin", "department_staff"],
+      report_priority: ["low", "medium", "high", "urgent"],
+      report_status: [
+        "submitted",
+        "under_review",
+        "in_progress",
+        "resolved",
+        "closed",
+        "rejected",
+      ],
     },
   },
 } as const
